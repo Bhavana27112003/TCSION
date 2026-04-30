@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Review Sentiment Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-shape shape1"></div>
+    <div class="background-shape shape2"></div>
+
+    <div class="main-container">
+        <div class="card">
+            <div class="header-section">
+                <div class="icon-circle">💬</div>
+                <h1>Customer Review Sentiment Analyzer</h1>
+                <p class="subtitle">
+                    Analyze customer reviews as
+                    <span>Positive</span>,
+                    <span>Neutral</span>, or
+                    <span>Negative</span>
+                </p>
+            </div>
+
+            <div class="input-section">
+                <label for="review">Enter Your Review</label>
+                <textarea id="review" placeholder="Example: This product is amazing and works perfectly..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button onclick="analyzeSentiment()">Analyze Sentiment</button>
+                <button class="clear-btn" onclick="clearReview()">Clear</button>
+            </div>
+
+            <div id="result-box" class="result-box hidden">
+                <h2>Prediction Result</h2>
+                <p id="result-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeSentiment() {
+            const review = document.getElementById("review").value.trim();
+            const resultBox = document.getElementById("result-box");
+            const resultText = document.getElementById("result-text");
+
+            if (!review) {
+                resultBox.className = "result-box warning";
+                resultBox.classList.remove("hidden");
+                resultText.innerHTML = "⚠️ Please enter a review.";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("review", review);
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                resultBox.className = "result-box";
+                resultBox.classList.remove("hidden");
+
+                const sentiment = data.sentiment.toLowerCase();
+
+                if (sentiment.includes("positive")) {
+                    resultBox.classList.add("positive");
+                } else if (sentiment.includes("negative")) {
+                    resultBox.classList.add("negative");
+                } else if (sentiment.includes("neutral")) {
+                    resultBox.classList.add("neutral");
+                } else {
+                    resultBox.classList.add("warning");
+                }
+
+                resultText.innerHTML = data.sentiment;
+
+                resultBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            } catch (error) {
+                resultBox.className = "result-box warning";
+                resultBox.classList.remove("hidden");
+                resultText.innerHTML = "⚠️ Something went wrong. Please try again.";
+            }
+        }
+
+        function clearReview() {
+            document.getElementById("review").value = "";
+            document.getElementById("result-box").className = "result-box hidden";
+            document.getElementById("result-text").innerHTML = "";
+        }
+    </script>
+</body>
+</html>
